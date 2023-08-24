@@ -4,20 +4,24 @@ const io = require("socket.io")(8900, {
   },
 });
 
-const users = {};
+const users = new Map();
 
 io.on("connection", (socket) => {
   console.log(`User connectd with id ${socket.id}`);
-  socket.on("newUser", (username) => {
-    users[socket.id] = username;
-    socket.broadcast.emit("user-connected", username);
+  socket.on("newUser", (userId) => {
+    console.log("senderIdBackEnd", userId);
+    users.set(socket.id, userId);
+    // users[socket.id] = userId;
+    socket.broadcast.emit("user-connected", userId);
   });
-  socket.on("onMessage", ({ to, message }) => {
-    console.log("Received", message);
+  socket.on("onMessage", ({ currentChat, newMessage }) => {
+    console.log("Received", newMessage);
+    console.log("receiver", currentChat);
     const sender = users[socket.id];
     console.log("sender", sender);
+    console.log("users", users);
     const toSocket = Object.keys(users).find(
-      (socketId) => users[socketId] === to
+      (socketId) => users[socketId] === currentChat
     );
     console.log("to", toSocket);
     if (toSocket) {
